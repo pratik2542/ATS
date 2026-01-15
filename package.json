@@ -1,0 +1,45 @@
+{
+  "name": "ats-resume-tracker",
+  "version": "1.0.0",
+  "description": "AI-powered Chrome extension for ATS resume tracking, optimization, and cover letter generation",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "chrome-extension",
+    "ats",
+    "resume",
+    "cover-letter",
+    "ai",
+    "job-application"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chrome": "^0.0.254",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "canvas": "^3.2.1",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.8.1",
+    "style-loader": "^3.3.3",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "dotenv-webpack": "^8.1.1",
+    "firebase": "^12.7.0",
+    "jspdf": "^4.0.0",
+    "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^5.4.530",
+    "pizzip": "^3.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zustand": "^4.4.7"
+  }
+}
