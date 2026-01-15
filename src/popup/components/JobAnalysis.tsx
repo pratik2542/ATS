@@ -1666,7 +1666,7 @@ ${textToAnalyze}
                            borderRadius: '6px',
                            border: '1px solid var(--border)',
                            background: 'rgba(0,0,0,0.2)',
-                           color: 'var(--text)',
+                           color: 'rgba(255, 255, 255, 0.92)',
                            fontSize: '14px',
                            outline: 'none',
                            appearance: 'none',
@@ -1676,10 +1676,10 @@ ${textToAnalyze}
                         onChange={(e) => ensureApplication({ jobId: job.id, status: e.target.value as any })}
                         disabled={saving}
                       >
-                        <option value="applied">Applied</option>
-                        <option value="interviewing">Interviewing</option>
-                        <option value="accepted">Accepted</option>
-                        <option value="rejected">Rejected</option>
+                        <option style={{ background: '#0b1220', color: 'rgba(255, 255, 255, 0.92)' }} value="applied">Applied</option>
+                        <option style={{ background: '#0b1220', color: 'rgba(255, 255, 255, 0.92)' }} value="interviewing">Interviewing</option>
+                        <option style={{ background: '#0b1220', color: 'rgba(255, 255, 255, 0.92)' }} value="accepted">Accepted</option>
+                        <option style={{ background: '#0b1220', color: 'rgba(255, 255, 255, 0.92)' }} value="rejected">Rejected</option>
                       </select>
                       <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '8px', lineHeight: 1.4 }}>
                         Update the status as you progress through the hiring process.

@@ -504,6 +504,32 @@ body::-webkit-scrollbar {
   min-height: 100px;
 }
 
+/* Select dropdowns */
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+select:focus {
+  outline: none;
+  border-color: rgba(139, 92, 246, 0.8);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+select option {
+  background: var(--bg);
+  color: var(--text);
+  padding: 8px;
+}
+
 /* File Upload */
 .file-upload-area {
   border: 1px dashed rgba(139, 92, 246, 0.65);

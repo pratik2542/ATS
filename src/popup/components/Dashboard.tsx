@@ -461,10 +461,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onBack, onDataChanged }) => {
                                        app.status === 'interviewing' ? 'rgba(251, 191, 36, 0.15)' :
                                        app.status === 'accepted' ? 'rgba(34, 197, 94, 0.15)' :
                                        'rgba(251, 113, 133, 0.15)',
-                            color: app.status === 'applied' ? 'var(--accent3)' :
-                                   app.status === 'interviewing' ? 'var(--warning)' :
-                                   app.status === 'accepted' ? 'var(--accent2)' :
-                                   'var(--danger)',
+                            color: app.status === 'applied' ? '#06b6d4' :
+                                   app.status === 'interviewing' ? '#fbbf24' :
+                                   app.status === 'accepted' ? '#22c55e' :
+                                   '#fb7185',
                             fontSize: '12px',
                             fontWeight: 600,
                             outline: 'none',
@@ -475,10 +475,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onBack, onDataChanged }) => {
                           onChange={(e) => void handleStatusChange(app.id, e.target.value)}
                           disabled={syncing}
                         >
-                          <option value="applied">Applied</option>
-                          <option value="interviewing">Interviewing</option>
-                          <option value="accepted">Accepted</option>
-                          <option value="rejected">Rejected</option>
+                          <option style={{ background: '#0b1220', color: '#06b6d4' }} value="applied">Applied</option>
+                          <option style={{ background: '#0b1220', color: '#fbbf24' }} value="interviewing">Interviewing</option>
+                          <option style={{ background: '#0b1220', color: '#22c55e' }} value="accepted">Accepted</option>
+                          <option style={{ background: '#0b1220', color: '#fb7185' }} value="rejected">Rejected</option>
                         </select>
                       )}
                     </div>
