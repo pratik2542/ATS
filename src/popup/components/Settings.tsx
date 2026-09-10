@@ -16,17 +16,22 @@ import {
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { getFirebaseAuth, getFirestore, isFirebaseEnabled } from '../../firebase/firebase';
 import { tryCloudPullAllToLocal } from '../../firebase/sync';
+import { AIProvider } from '../../utils/ai';
 
 interface SettingsProps {
   settings: {
     openaiApiKey: string;
     geminiApiKey: string;
-    aiProvider: 'openai' | 'gemini';
+    openrouterApiKey: string;
+    groqApiKey: string;
+    aiProvider: AIProvider;
   };
   onSettingsSave: (settings: {
     openaiApiKey: string;
     geminiApiKey: string;
-    aiProvider: 'openai' | 'gemini';
+    openrouterApiKey: string;
+    groqApiKey: string;
+    aiProvider: AIProvider;
   }) => void;
   onBack: () => void;
 }
@@ -35,6 +40,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSettingsSave, onBack })
   const [localSettings, setLocalSettings] = useState(settings);
   const [showOpenAIKey, setShowOpenAIKey] = useState(false);
   const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showOpenRouterKey, setShowOpenRouterKey] = useState(false);
+  const [showGroqKey, setShowGroqKey] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const [cloudUser, setCloudUser] = useState<User | null>(null);
@@ -425,7 +432,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSettingsSave, onBack })
         <div className="status-card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
             <div style={{ fontSize: '14px', fontWeight: 800 }}>🤖 AI Provider</div>
-            <span className="chip info">{localSettings.aiProvider === 'openai' ? 'OpenAI' : 'Gemini'}</span>
+            <span className="chip info">{localSettings.aiProvider === 'openai' ? 'OpenAI' : localSettings.aiProvider === 'gemini' ? 'Gemini' : localSettings.aiProvider === 'openrouter' ? 'OpenRouter' : 'Groq'}</span>
           </div>
           
           <div className="form-group">
@@ -433,10 +440,12 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSettingsSave, onBack })
             <select 
               className="form-input"
               value={localSettings.aiProvider}
-              onChange={(e) => setLocalSettings({...localSettings, aiProvider: e.target.value as 'openai' | 'gemini'})}
+              onChange={(e) => setLocalSettings({...localSettings, aiProvider: e.target.value as AIProvider})}
             >
               <option value="openai">OpenAI (GPT-4)</option>
               <option value="gemini">Google Gemini (Pro/Flash)</option>
+              <option value="openrouter">OpenRouter (automatic model)</option>
+              <option value="groq">Groq (automatic model)</option>
             </select>
           </div>
         </div>
@@ -504,6 +513,48 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSettingsSave, onBack })
                 Get your key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a>
               </p>
             </div>
+          </div>
+        )}
+
+        {localSettings.aiProvider === 'openrouter' && (
+          <div className="status-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800 }}>🔑 OpenRouter API Key</div>
+              <button className="icon-button" onClick={() => setShowOpenRouterKey(!showOpenRouterKey)} title="Show/Hide">
+                {showOpenRouterKey ? '🙈' : '👁️'}
+              </button>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '14px' }}>
+              Automatically selects a strong text model for resume and job analysis.
+            </p>
+            <div className="form-group">
+              <label className="form-label">API Key</label>
+              <input type={showOpenRouterKey ? 'text' : 'password'} className="form-input" value={localSettings.openrouterApiKey} onChange={(e) => setLocalSettings({...localSettings, openrouterApiKey: e.target.value})} placeholder="sk-or-..." />
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '10px' }}>
+              Get your key at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai</a>
+            </p>
+          </div>
+        )}
+
+        {localSettings.aiProvider === 'groq' && (
+          <div className="status-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800 }}>🔑 Groq API Key</div>
+              <button className="icon-button" onClick={() => setShowGroqKey(!showGroqKey)} title="Show/Hide">
+                {showGroqKey ? '🙈' : '👁️'}
+              </button>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '14px' }}>
+              Automatically selects the strongest available Groq text model.
+            </p>
+            <div className="form-group">
+              <label className="form-label">API Key</label>
+              <input type={showGroqKey ? 'text' : 'password'} className="form-input" value={localSettings.groqApiKey} onChange={(e) => setLocalSettings({...localSettings, groqApiKey: e.target.value})} placeholder="gsk_..." />
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '10px' }}>
+              Get your key at <a href="https://console.groq.com/keys" target="_blank">console.groq.com</a>
+            </p>
           </div>
         )}
 

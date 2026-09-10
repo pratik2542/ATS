@@ -1,6 +1,7 @@
 // Background Service Worker - Handles extension lifecycle and message routing
 
 import { getGeminiGenerateContentUrl } from '../utils/gemini';
+import { AIProvider, callCompatibleAI } from '../utils/ai';
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log('ATS Resume Tracker installed');
@@ -113,7 +114,7 @@ async function handleCoverLetterGeneration(payload: any, sendResponse: (response
 }
 
 // AI Analysis Functions
-async function analyzeWithAI(resume: any, job: any, apiKey: string, provider: 'openai' | 'gemini') {
+async function analyzeWithAI(resume: any, job: any, apiKey: string, provider: AIProvider) {
   const prompt = `You are an ATS (Applicant Tracking System) expert. Analyze the following resume against the job description and provide detailed feedback.
 
 Resume:
@@ -147,7 +148,7 @@ Provide your analysis in the following JSON format:
   return JSON.parse(response);
 }
 
-async function generateOptimizedResume(resume: any, job: any, analysis: any, apiKey: string, provider: 'openai' | 'gemini') {
+async function generateOptimizedResume(resume: any, job: any, analysis: any, apiKey: string, provider: AIProvider) {
   const prompt = `You are an expert resume writer. Based on the analysis below, modify the resume to better match the job description while keeping the core information truthful.
 
 Original Resume:
@@ -171,7 +172,7 @@ Provide the optimized resume content as plain text.`;
   return await callAI(prompt, apiKey, provider);
 }
 
-async function generateCoverLetter(resume: any, job: any, apiKey: string, provider: 'openai' | 'gemini') {
+async function generateCoverLetter(resume: any, job: any, apiKey: string, provider: AIProvider) {
   const prompt = `You are an expert cover letter writer. Create a compelling, personalized cover letter for this job application.
 
 Resume Summary:
@@ -195,44 +196,11 @@ Provide only the cover letter content without any additional commentary.`;
   return await callAI(prompt, apiKey, provider);
 }
 
-async function callAI(prompt: string, apiKey: string, provider: 'openai' | 'gemini' = 'openai'): Promise<string> {
+async function callAI(prompt: string, apiKey: string, provider: AIProvider = 'openai'): Promise<string> {
   if (provider === 'gemini') {
     return await callGemini(prompt, apiKey);
-  } else {
-    return await callOpenAI(prompt, apiKey);
   }
-}
-
-async function callOpenAI(prompt: string, apiKey: string): Promise<string> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4-turbo-preview',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert ATS system and career advisor. Provide precise, actionable advice.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data.choices[0].message.content;
+  return await callCompatibleAI(prompt, apiKey, provider);
 }
 
 async function callGemini(prompt: string, apiKey: string): Promise<string> {

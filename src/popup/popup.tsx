@@ -9,6 +9,7 @@ import './popup.css';
 import { tryCloudPullAllToLocal } from '@/firebase/sync';
 import { getFirebaseAuth, isFirebaseEnabled } from '@/firebase/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { AIProvider } from '../utils/ai';
 
 type View = 'home' | 'upload' | 'analyze' | 'dashboard' | 'settings';
 type NavView = 'home' | 'upload' | 'dashboard' | 'settings';
@@ -16,7 +17,9 @@ type NavView = 'home' | 'upload' | 'dashboard' | 'settings';
 type SettingsState = {
   openaiApiKey: string;
   geminiApiKey: string;
-  aiProvider: 'openai' | 'gemini';
+  openrouterApiKey: string;
+  groqApiKey: string;
+  aiProvider: AIProvider;
 };
 
 const Popup: React.FC = () => {
@@ -27,6 +30,8 @@ const Popup: React.FC = () => {
   const [settings, setSettings] = useState<SettingsState>({
     openaiApiKey: '',
     geminiApiKey: '',
+    openrouterApiKey: '',
+    groqApiKey: '',
     aiProvider: 'openai'
   });
 
@@ -49,13 +54,17 @@ const Popup: React.FC = () => {
           setSettings({
             openaiApiKey: result.apiKey,
             geminiApiKey: '',
+            openrouterApiKey: '',
+            groqApiKey: '',
             aiProvider: 'openai'
           });
         } else {
-          setSettings(result.settings || {
-            openaiApiKey: '',
-            geminiApiKey: '',
-            aiProvider: 'openai'
+          setSettings({
+            openaiApiKey: result.settings?.openaiApiKey || '',
+            geminiApiKey: result.settings?.geminiApiKey || '',
+            openrouterApiKey: result.settings?.openrouterApiKey || '',
+            groqApiKey: result.settings?.groqApiKey || '',
+            aiProvider: result.settings?.aiProvider || 'openai'
           });
         }
       });
@@ -270,8 +279,14 @@ const HomeView: React.FC<HomeViewProps> = ({
   settings,
   onNavigate
 }) => {
-  const hasActiveKey = settings.aiProvider === 'openai' ? !!settings.openaiApiKey : !!settings.geminiApiKey;
-  const providerLabel = settings.aiProvider === 'openai' ? 'OpenAI' : 'Gemini';
+  const providerKeys = {
+    openai: settings.openaiApiKey,
+    gemini: settings.geminiApiKey,
+    openrouter: settings.openrouterApiKey,
+    groq: settings.groqApiKey
+  };
+  const hasActiveKey = !!providerKeys[settings.aiProvider];
+  const providerLabel = settings.aiProvider === 'openai' ? 'OpenAI' : settings.aiProvider === 'gemini' ? 'Gemini' : settings.aiProvider === 'openrouter' ? 'OpenRouter' : 'Groq';
   const providerDotClass = hasActiveKey ? 'pill-dot' : 'pill-dot warning';
 
   return (

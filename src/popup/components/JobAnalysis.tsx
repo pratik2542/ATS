@@ -5,11 +5,14 @@ import { tryCloudDeleteCoverLetter, tryCloudDeleteOptimizedResume, tryCloudSyncA
 import { isCloudinaryEnabled, uploadFileToCloudinary } from '../../cloudinary/cloudinary';
 import { extractParagraphsFromDocxBase64, patchDocxWithParagraphs } from '../utils/docx';
 import { getGeminiGenerateContentUrl } from '../../utils/gemini';
+import { AIProvider, callCompatibleAI } from '../../utils/ai';
 
 interface SettingsState {
   openaiApiKey: string;
   geminiApiKey: string;
-  aiProvider: 'openai' | 'gemini';
+  openrouterApiKey: string;
+  groqApiKey: string;
+  aiProvider: AIProvider;
 }
 
 interface JobAnalysisProps {
@@ -33,6 +36,22 @@ type GeneratedDocState = {
 };
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+
+const getProviderKey = (settings: SettingsState): string => {
+  switch (settings.aiProvider) {
+    case 'gemini': return settings.geminiApiKey;
+    case 'openrouter': return settings.openrouterApiKey;
+    case 'groq': return settings.groqApiKey;
+    default: return settings.openaiApiKey;
+  }
+};
+
+const providerLabel = (provider: AIProvider): string => ({
+  openai: 'OpenAI',
+  gemini: 'Gemini',
+  openrouter: 'OpenRouter',
+  groq: 'Groq'
+}[provider]);
 
 const extractJsonObject = (text: string): string => {
   // Remove common markdown fences.
@@ -363,7 +382,7 @@ const JobAnalysis: React.FC<JobAnalysisProps> = ({ resume, job, settings, onBack
   const canGenerateResume = Boolean(
     !loading &&
       result &&
-      (settings.aiProvider === 'gemini' ? settings.geminiApiKey : settings.openaiApiKey)
+      getProviderKey(settings)
   );
 
   const [rewriteOpen, setRewriteOpen] = useState(false);
@@ -852,11 +871,12 @@ COVER LETTER:
             'Gemini request'
           );
         }
-        if (!settings.openaiApiKey) throw new Error('OpenAI API key is missing');
+        const compatibleApiKey = getProviderKey(settings);
+        if (!compatibleApiKey) throw new Error(`${providerLabel(settings.aiProvider)} API key is missing`);
         return withTimeout(
-          callOpenAIAPI(p, settings.openaiApiKey, attemptBasedTemperature, rewriteAbortRef.current?.signal),
-          90000,
-          'OpenAI request'
+          callCompatibleAI(p, compatibleApiKey, settings.aiProvider === 'openai' ? 'openai' : settings.aiProvider, attemptBasedTemperature, rewriteAbortRef.current?.signal),
+          120000,
+          `${providerLabel(settings.aiProvider)} request`
         );
       };
 
@@ -1217,9 +1237,9 @@ COVER LETTER:
           if (!settings.geminiApiKey) throw new Error('Gemini API key is missing');
           return callGeminiTextAPI(p, settings.geminiApiKey, attemptBasedTemperature, rewriteAbortRef.current?.signal);
         }
-        if (!settings.openaiApiKey) throw new Error('OpenAI API key is missing');
-        // @ts-ignore
-        return callOpenAIAPI(p, settings.openaiApiKey, attemptBasedTemperature, rewriteAbortRef.current?.signal);
+        const compatibleApiKey = getProviderKey(settings);
+        if (!compatibleApiKey) throw new Error(`${providerLabel(settings.aiProvider)} API key is missing`);
+        return callCompatibleAI(p, compatibleApiKey, settings.aiProvider === 'openai' ? 'openai' : settings.aiProvider, attemptBasedTemperature, rewriteAbortRef.current?.signal);
       };
 
       let cleaned = await runOnce(prompt);
@@ -1339,10 +1359,11 @@ ${textToAnalyze}
         }
         responseText = await callGeminiAPI(prompt, settings.geminiApiKey);
       } else {
-        if (!settings.openaiApiKey) {
-          throw new Error('OpenAI API key is missing');
+        const compatibleApiKey = getProviderKey(settings);
+        if (!compatibleApiKey) {
+          throw new Error(`${providerLabel(settings.aiProvider)} API key is missing`);
         }
-        responseText = await callOpenAIAPI(prompt, settings.openaiApiKey);
+        responseText = await callCompatibleAI(prompt, compatibleApiKey, settings.aiProvider === 'openai' ? 'openai' : settings.aiProvider, 0.2, undefined, 'json_object');
       }
 
       const jsonOnly = extractJsonObject(responseText);
@@ -1403,33 +1424,6 @@ ${textToAnalyze}
     return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
   };
 
-  const callOpenAIAPI = async (prompt: string, apiKey: string, temperature = 0.7, signal?: AbortSignal): Promise<string> => {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      signal,
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: 'You are a helpful ATS resume analyzer.' },
-          { role: 'user', content: prompt }
-        ],
-        temperature
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
-  };
-
   return (
     <div className="analysis-view">
       <div className="header">
@@ -1442,7 +1436,7 @@ ${textToAnalyze}
           <div className="topbar-actions">
             <span className="pill" title="Provider in use">
               <span className="pill-dot" />
-              {settings.aiProvider === 'gemini' ? 'Gemini' : 'OpenAI'}
+              {providerLabel(settings.aiProvider)}
             </span>
             <button
               className="icon-button"
@@ -1466,7 +1460,7 @@ ${textToAnalyze}
                 <div style={{ display: 'grid', gap: '6px', flex: 1 }}>
                   <div style={{ fontWeight: 800 }}>Analyzing…</div>
                   <div style={{ color: 'var(--muted)', fontSize: '12px' }}>
-                    Using {settings.aiProvider === 'gemini' ? 'Gemini' : 'OpenAI'} to score your match.
+                    Using {providerLabel(settings.aiProvider)} to score your match.
                   </div>
                 </div>
               </div>
