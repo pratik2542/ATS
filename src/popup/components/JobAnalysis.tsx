@@ -4,6 +4,7 @@ import { downloadBlob, downloadDoc, downloadPdf, downloadTxt } from '../utils/do
 import { tryCloudDeleteCoverLetter, tryCloudDeleteOptimizedResume, tryCloudSyncApplication, tryCloudSyncCoverLetter, tryCloudSyncOptimizedResume, tryCloudSyncJob } from '../../firebase/sync';
 import { isCloudinaryEnabled, uploadFileToCloudinary } from '../../cloudinary/cloudinary';
 import { extractParagraphsFromDocxBase64, patchDocxWithParagraphs } from '../utils/docx';
+import { getGeminiGenerateContentUrl } from '../../utils/gemini';
 
 interface SettingsState {
   openaiApiKey: string;
@@ -746,7 +747,7 @@ COVER LETTER:
     responseMimeType?: 'application/json' | 'text/plain',
     responseSchema?: any
   ): Promise<string> => {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const url = await getGeminiGenerateContentUrl(apiKey);
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1373,8 +1374,7 @@ ${textToAnalyze}
   };
 
   const callGeminiAPI = async (prompt: string, apiKey: string, signal?: AbortSignal): Promise<string> => {
-    // Use a stable model and request JSON when supported.
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const url = await getGeminiGenerateContentUrl(apiKey);
     
     const response = await fetch(url, {
       method: 'POST',

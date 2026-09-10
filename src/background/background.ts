@@ -1,5 +1,7 @@
 // Background Service Worker - Handles extension lifecycle and message routing
 
+import { getGeminiGenerateContentUrl } from '../utils/gemini';
+
 chrome.runtime.onInstalled.addListener(() => {
   console.log('ATS Resume Tracker installed');
   
@@ -234,7 +236,7 @@ async function callOpenAI(prompt: string, apiKey: string): Promise<string> {
 }
 
 async function callGemini(prompt: string, apiKey: string): Promise<string> {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+  const response = await fetch(await getGeminiGenerateContentUrl(apiKey), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
