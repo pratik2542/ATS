@@ -104,6 +104,7 @@ export const callCompatibleAI = async (
         { role: 'user', content: prompt }
       ],
       temperature,
+      max_tokens: provider === 'groq' ? 900 : 2000,
       ...(responseFormat ? { response_format: { type: responseFormat } } : {})
     })
   });
